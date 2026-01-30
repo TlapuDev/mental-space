@@ -1,16 +1,84 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>MentalSpace - Log Your Mood</title>
+    <title>MentalSpace - A DigitalSpace For a Healthier Mind</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #a8c0ff, #3f2b96);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+        }
+        h1 { 
+            color: var(--primary); 
+            margin-bottom: 0.2rem; 
+            font-size: 2.5rem;
+            letter-spacing: -1px;
+        }
+        .tagline {
+            color: #636e72; 
+            font-style: italic;
+            font-size: 1.1rem;
+            margin-top: 0;
+            margin-bottom: 2rem;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            border: 2px solid #f1f2f6;
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #5b4bc4;
+        }
+    </style>
 </head>
 <body>
-    <h1>MentalSpace Journal</h1>
-    <form action="/add-mood" method="POST">
-        <p>How are you feeling?</p>
-        <input type="text" name="mood" placeholder="e.g., Calm" required>
-        <p>Any notes?</p>
-        <textarea name="note"></textarea><br><br>
-        <button type="submit">Save Mood</button>
-    </form>
+    <div class="container">
+        <header>
+            <h1>MentalSpace</h1>
+            <p class="tagline">A DigitalSpace For a Healthier Mind</p>
+        </header>
+
+        <form action="/add-mood" method="POST">
+            <input type="text" name="mood" placeholder="How are you feeling?" required>
+            <textarea name="note" placeholder="Any notes?" rows="4"></textarea>
+            <button type="submit">Save Mood</button>
+        </form>
+        
+        <div style="margin-top: 25px;">
+            <a href="/moods" style="color: var(--primary); text-decoration: none; font-weight: 600;">View My History →</a>
+        </div>
+    </div>
 </body>
 </html>
