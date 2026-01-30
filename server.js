@@ -1,6 +1,9 @@
 const express = require('express');
 const fs = require('fs'); // The "File System" tool
 const app = express();
+app.get('/', (req, res) => {
+    res.redirect('/home');
+});
 const port = 3000;
 
 app.use(express.urlencoded({ extended: true }));
