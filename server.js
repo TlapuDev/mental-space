@@ -47,7 +47,11 @@ app.get('/moods', (req, res) => {
         </div>
         <form action="/delete-mood" method="POST" style="margin: 0;">
             <input type="hidden" name="index" value="${index}">
-            <button type="submit" style="background: #ff7675; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">Delete</button>
+            <button type="submit" 
+        onclick="return confirm('Are you sure you want to delete this mood entry? This cannot be undone.')" 
+        style="background: #ff7675; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
+    Delete
+</button>
         </form>
     </div>
 `).reverse().join(''); // .reverse() shows newest moods first!
