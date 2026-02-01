@@ -73,7 +73,16 @@
         <form action="/add-mood" method="POST">
             <input type="text" name="mood" placeholder="How are you feeling?" required>
             <textarea name="note" placeholder="Any notes?" rows="4"></textarea>
-            <button type="submit">Save Mood</button>
+            <div style="margin: 20px 0; text-align: left;">
+    <label for="stressScore" style="font-weight: bold; color: #4a5568;">Current Stress Level (1-10):</label>
+    <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
+        <span style="font-weight: bold; color: #6c5ce7;">Calm (1)</span>
+        <input type="range" id="stressScore" name="stressScore" min="1" max="10" value="5" style="flex-grow: 1; cursor: pointer;">
+        <span style="font-weight: bold; color: #ff7675;">High (10)</span>
+    </div>
+</div>
+
+<button type="submit">Save Mood</button>
         </form>
         
         <div style="margin-top: 25px;">

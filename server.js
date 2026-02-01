@@ -42,7 +42,12 @@ app.get('/moods', (req, res) => {
     <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
         <div>
             <small style="color: #a0aec0;">${m.date}</small>
-            <h3 style="margin: 5px 0; color: #4a90e2;">${m.mood}</h3>
+            <h3 style="margin: 5px 0; color: #4a90e2;">
+    ${m.mood} 
+    <span style="font-size: 0.8rem; background: #6c5ce7; color: white; padding: 2px 8px; border-radius: 20px; margin-left: 10px;">
+        Stress: ${m.stressScore}/10
+    </span>
+</h3>
             <p style="margin: 0; color: #4a5568;">${m.note}</p>
         </div>
         <form action="/delete-mood" method="POST" style="margin: 0;">
@@ -80,9 +85,10 @@ res.send(`
 app.post('/add-mood', (req, res) => {
     const moods = getSavedMoods();
     const newEntry = {
-        date: new Date().toLocaleDateString(),
         mood: req.body.mood,
-        note: req.body.note
+        note: req.body.note,
+        stressScore: req.body.stressScore, // Add this exact line
+        date: new Date().toLocaleString()
     };
     
     moods.push(newEntry);
