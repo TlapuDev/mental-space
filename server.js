@@ -1,159 +1,87 @@
 const express = require('express');
-const fs = require('fs'); // The "File System" tool
+const fs = require('fs');
+const path = require('path');
 const app = express();
-app.get('/', (req, res) => {
-    res.redirect('/home');
-});
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
 
-// Function to read data from the file
-const getSavedMoods = () => {
-    try {
-        const data = fs.readFileSync('moods.json');
-        return JSON.parse(data);
-    } catch (error) {
-        return []; // Return empty list if file doesn't exist yet
-    }
-};
+function getSavedMoods() {
+    if (!fs.existsSync('moods.json')) return [];
+    const data = fs.readFileSync('moods.json');
+    return JSON.parse(data);
+}
 
-app.get('/home', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+// 1. HOME PAGE
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-
+// 2. VIEW HISTORY PAGE (The Card Design)
 app.get('/moods', (req, res) => {
     const moods = getSavedMoods();
     const listItems = moods.map((m, index) => `
-        <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 12px; border-left: 5px solid ${m.stressScore > 7 ? '#ff7675' : '#6c5ce7'}; shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <small style="color: #a0aec0;">${m.date}</small>
-            <h3 style="margin: 5px 0;">${m.mood} (Stress: ${m.stressScore || 0}/10)</h3>
-            <p style="font-style: italic;">"${m.note}"</p>
-            <form action="/delete-mood" method="POST">
+        <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid ${m.stressScore > 7 ? '#ff7675' : '#6c5ce7'};">
+            <small style="color: #a0aec0; font-weight: bold;">${m.date}</small>
+            <h3 style="margin: 5px 0; color: #2d3748;">${m.mood} (Stress: ${m.stressScore || 0}/10)</h3>
+            <p style="margin: 0; color: #4a5568;">"${m.note}"</p>
+            <form action="/delete-mood" method="POST" style="margin-top: 10px;">
                 <input type="hidden" name="index" value="${index}">
-                <button type="submit" style="background: #fff5f5; color: #e53e3e; border: none; padding: 5px; cursor: pointer;">Delete</button>
+                <button type="submit" style="background: #fff5f5; color: #e53e3e; border: 1px solid #feb2b2; padding: 5px 10px; border-radius: 8px; cursor: pointer;">Delete</button>
             </form>
         </div>
     `).reverse().join('');
 
     res.send(`
         <html>
+        <head><title>History</title><meta name="viewport" content="width=device-width, initial-scale=1"></head>
         <body style="font-family: sans-serif; background: #f5f7fa; padding: 20px;">
-            <a href="/" style="color: #6c5ce7; font-weight: bold; text-decoration: none;">← Back</a>
-            <div style="max-width: 500px; margin: auto;">
-                <h1>History (${moods.length})</h1>
+            <div style="max-width: 600px; margin: 0 auto;">
+                <a href="/" style="text-decoration: none; color: #6c5ce7; font-weight: bold;">← Back</a>
+                <h1>Your History (${moods.length})</h1>
                 ${listItems}
             </div>
         </body>
         </html>
     `);
 });
-    // Create "Stat Badges" for the top of the page
-    const statsHtml = Object.entries(stats).map(([name, count]) => `
-        <div style="background: #e2e8f0; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; color: #4a5568;">
-            ${name}: ${count}
-        </div>
-    `).join('');
 
-    const listItems = moods.map((m, index) => `
-    <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 10px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-        <div>
-            <small style="color: #a0aec0;">${m.date}</small>
-            <h3 style="margin: 5px 0; color: #4a90e2;">
-    ${m.mood} 
-    <span style="font-size: 0.8rem; background: #6c5ce7; color: white; padding: 2px 8px; border-radius: 20px; margin-left: 10px;">
-        Stress: ${m.stressScore}/10
-    </span>
-</h3>
-            <p style="margin: 0; color: #4a5568;">${m.note}</p>
-        </div>
-        <form action="/delete-mood" method="POST" style="margin: 0;">
-            <input type="hidden" name="index" value="${index}">
-            <button type="submit" 
-        onclick="return confirm('Are you sure you want to delete this mood entry? This cannot be undone.')" 
-        style="background: #ff7675; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
-    Delete
-</button>
-        </form>
-    </div>
-`).reverse().join(''); // .reverse() shows newest moods first!
-res.send(`
-        <body style="font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #a8c0ff, #3f2b96); min-height: 100vh; margin: 0; padding: 40px; display: flex; flex-direction: column; align-items: center;">
-            <div style="background: white; padding: 2.5rem; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 90%; max-width: 600px;">
-                <header style="text-align: center; margin-bottom: 20px;">
-                    <h1 style="color: #6c5ce7; margin: 0; font-size: 2.2rem;">MentalSpace History</h1>
-                    <p style="font-style: italic; color: #636e72; margin-bottom: 15px;">A DigitalSpace For a Healthier Mind</p>
-                    <a href="/home" style="color: #6c5ce7; text-decoration: none; font-weight: bold;">← Back to Home</a>
-                </header>
-                
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 25px;">
-                    ${statsHtml}
-                </div>
-
-                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-
-                <div style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
-                    ${listItems}
-                </div>
-            </div>
-        </body>
-    `);
-});
+// 3. SAVE MOOD (The Modern Success Page)
 app.post('/add-mood', (req, res) => {
     const moods = getSavedMoods();
     const newEntry = {
         mood: req.body.mood,
         note: req.body.note,
-        stressScore: req.body.stressScore, // Add this exact line
+        stressScore: req.body.stressScore,
         date: new Date().toLocaleString()
     };
-    
     moods.push(newEntry);
-    
-    // This line saves the list to your hard drive!
     fs.writeFileSync('moods.json', JSON.stringify(moods, null, 2));
+
     res.send(`
-    <html>
-    <head>
-        <title>Success | MentalSpace</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-            body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #6c5ce7, #a8c0ff); color: white; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
-            .card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); padding: 40px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-            h1 { margin-top: 0; font-size: 2rem; }
-            .links { margin-top: 25px; }
-            .btn { background: white; color: #6c5ce7; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; margin: 0 10px; transition: 0.3s; display: inline-block; }
-            .btn:hover { transform: scale(1.05); }
-        </style>
-    </head>
-    <body>
-        <div class="card">
-            <div style="font-size: 50px; margin-bottom: 10px;">✅</div>
-            <h1>Mood Logged!</h1>
-            <p>Your reflection has been saved securely to your journey.</p>
-            <div class="links">
-                <a href="/" class="btn">Add Another</a>
-                <a href="/moods" class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid white;">View History</a>
+        <html>
+        <body style="font-family: sans-serif; background: linear-gradient(135deg, #6c5ce7, #a8c0ff); color: white; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center;">
+            <div style="background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+                <h1>✅ Logged Successfully!</h1>
+                <p>Your reflection is safe.</p>
+                <div style="margin-top: 20px;">
+                    <a href="/" style="background: white; color: #6c5ce7; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; margin-right: 10px;">Add More</a>
+                    <a href="/moods" style="color: white; text-decoration: underline;">View History</a>
+                </div>
             </div>
-        </div>
-    </body>
-    </html>
-`);
+        </body>
+        </html>
+    `);
 });
+
+// 4. DELETE MOOD
 app.post('/delete-mood', (req, res) => {
     const indexToDelete = req.body.index;
     let moods = getSavedMoods();
-    
-    // Remove the item at that specific position
     moods.splice(indexToDelete, 1);
-    
-    // Save the updated list back to the file
-    const fs = require('fs');
     fs.writeFileSync('moods.json', JSON.stringify(moods, null, 2));
-    
     res.redirect('/moods');
 });
-app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
-});
+
+app.listen(PORT, () => console.log('Server running on port ' + PORT));
