@@ -25,11 +25,57 @@ app.get('/home', (req, res) => {
 app.get('/moods', (req, res) => {
     const moods = getSavedMoods();
     
-    // Logic: Count how many times each mood appears
-    const stats = {};
-    moods.forEach(m => {
-        stats[m.mood] = (stats[m.mood] || 0) + 1;
-    });
+    const listItems = moods.map((m, index) => `
+        <div style="background: white; padding: 20px; margin: 15px 0; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid ${m.stressScore > 7 ? '#ff7675' : '#6c5ce7'};">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <small style="color: #a0aec0; font-weight: bold;">${m.date}</small>
+                    <h3 style="margin: 5px 0; color: #2d3748; display: flex; align-items: center; gap: 10px;">
+                        ${m.mood}
+                        <span style="font-size: 0.75rem; background: ${m.stressScore > 7 ? '#ff7675' : '#6c5ce7'}; color: white; padding: 3px 10px; border-radius: 20px;">
+                            Stress: ${m.stressScore || 0}/10
+                        </span>
+                    </h3>
+                    <p style="margin: 0; color: #4a5568; font-style: italic;">"${m.note}"</p>
+                </div>
+                <form action="/delete-mood" method="POST" style="margin: 0;">
+                    <input type="hidden" name="index" value="${index}">
+                    <button type="submit" style="background: #fff5f5; color: #e53e3e; border: 1px solid #feb2b2; padding: 5px 10px; border-radius: 8px; cursor: pointer;">Delete</button>
+                </form>
+            </div>
+        </div>
+    `).reverse().join('');
+
+    res.send(`
+        <html>
+        <head>
+            <title>History | MentalSpace</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); margin: 0; padding: 20px; min-height: 100vh; }
+                .container { max-width: 600px; margin: 0 auto; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .back-btn { display: inline-block; margin-bottom: 20px; color: #6c5ce7; text-decoration: none; font-weight: bold; }
+                .stats-card { background: #6c5ce7; color: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 10px 20px rgba(108, 92, 231, 0.2); }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <a href="/" class="back-btn">← Back to Tracker</a>
+                <div class="header">
+                    <h1 style="color: #2d3748; margin: 0;">Your Mental Journey</h1>
+                    <p style="color: #718096;">Tracking progress, one day at a time.</p>
+                </div>
+                <div class="stats-card">
+                    <small>Total Entries</small>
+                    <div style="font-size: 2rem; font-weight: bold;">${moods.length}</div>
+                </div>
+                ${listItems}
+            </div>
+        </body>
+        </html>
+    `);
+});
 
     // Create "Stat Badges" for the top of the page
     const statsHtml = Object.entries(stats).map(([name, count]) => `
