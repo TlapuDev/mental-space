@@ -113,8 +113,33 @@ app.post('/add-mood', (req, res) => {
     
     // This line saves the list to your hard drive!
     fs.writeFileSync('moods.json', JSON.stringify(moods, null, 2));
-    
-    res.send('<h1>Mood Saved Forever!</h1><a href="/home">Go Back</a> | <a href="/moods">View History</a>');
+    res.send(`
+    <html>
+    <head>
+        <title>Success | MentalSpace</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #6c5ce7, #a8c0ff); color: white; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+            .card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); padding: 40px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+            h1 { margin-top: 0; font-size: 2rem; }
+            .links { margin-top: 25px; }
+            .btn { background: white; color: #6c5ce7; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; margin: 0 10px; transition: 0.3s; display: inline-block; }
+            .btn:hover { transform: scale(1.05); }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div style="font-size: 50px; margin-bottom: 10px;">✅</div>
+            <h1>Mood Logged!</h1>
+            <p>Your reflection has been saved securely to your journey.</p>
+            <div class="links">
+                <a href="/" class="btn">Add Another</a>
+                <a href="/moods" class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid white;">View History</a>
+            </div>
+        </div>
+    </body>
+    </html>
+`);
 });
 app.post('/delete-mood', (req, res) => {
     const indexToDelete = req.body.index;
