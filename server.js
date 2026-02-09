@@ -23,21 +23,28 @@ const brandStyles = `
         .brand-name { color: #6c5ce7; font-size: 2.5rem; font-weight: 800; margin: 0; }
         .tagline { color: #4a5568; font-style: italic; font-size: 1rem; margin-top: 5px; }
         .card { background: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; border-left: 5px solid #6c5ce7; }
-        .stress-badge { font-size: 0.75rem; background: #6c5ce7; color: white; padding: 3px 10px; border-radius: 20px; margin-left: 10px; }
+        .intensity-badge { font-size: 0.75rem; background: #6c5ce7; color: white; padding: 3px 10px; border-radius: 20px; margin-left: 10px; }
         .delete-btn { background: #fff5f5; color: #e53e3e; border: 1px solid #feb2b2; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
     </style>
 `;
 
-// 1. HOME
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+// 1. LANDING PAGE (The "Front Door")
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'welcome.html'));
+});
 
-// 2. HISTORY WITH DELETE CONFIRMATION
+// 2. THE TRACKER (The form where you log moods)
+app.get('/tracker', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// 3. VIEW HISTORY (With "Intensity" Label)
 app.get('/moods', (req, res) => {
     const moods = getSavedMoods();
     const listItems = moods.map((m, index) => `
         <div class="card" style="border-left-color: ${m.stressScore > 7 ? '#ff7675' : '#6c5ce7'};">
             <small style="color: #a0aec0;">${m.date}</small>
-            <h3 style="margin: 10px 0;">${m.mood} <span class="stress-badge" style="background:${m.stressScore > 7 ? '#ff7675' : '#6c5ce7'};">Stress: ${m.stressScore || 0}/10</span></h3>
+            <h3 style="margin: 10px 0;">${m.mood} <span class="intensity-badge" style="background:${m.stressScore > 7 ? '#ff7675' : '#6c5ce7'};">Intensity: ${m.stressScore || 0}/10</span></h3>
             <p style="color: #4a5568; margin-bottom: 15px;">"${m.note}"</p>
             <form action="/delete-mood" method="POST" onsubmit="return confirm('Are you sure you want to delete this reflection? This cannot be undone.');">
                 <input type="hidden" name="index" value="${index}">
@@ -55,7 +62,7 @@ app.get('/moods', (req, res) => {
                     <h1 class="brand-name">MentalSpace</h1>
                     <p class="tagline">A DigitalSpace For a Healthier Mind</p>
                 </div>
-                <a href="/" style="color: #6c5ce7; text-decoration: none; font-weight: bold; display: block; margin-bottom: 20px;">← Back to Home</a>
+                <a href="/tracker" style="color: #6c5ce7; text-decoration: none; font-weight: bold; display: block; margin-bottom: 20px;">← Back to Tracker</a>
                 <h2 style="border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Your Journey (${moods.length})</h2>
                 ${listItems}
             </div>
@@ -64,10 +71,15 @@ app.get('/moods', (req, res) => {
     `);
 });
 
-// 3. SUCCESS PAGE
+// 4. SAVE MOOD
 app.post('/add-mood', (req, res) => {
     const moods = getSavedMoods();
-    moods.push({ mood: req.body.mood, note: req.body.note, stressScore: req.body.stressScore, date: new Date().toLocaleString() });
+    moods.push({ 
+        mood: req.body.mood, 
+        note: req.body.note, 
+        stressScore: req.body.stressScore, 
+        date: new Date().toLocaleString() 
+    });
     fs.writeFileSync('moods.json', JSON.stringify(moods, null, 2));
     res.send(`
         <html>
@@ -76,7 +88,7 @@ app.post('/add-mood', (req, res) => {
             <div class="card" style="text-align: center; width: 100%; max-width: 400px; border: none;">
                 <h1 style="color: #6c5ce7;">Saved Successfully!</h1>
                 <p>Well done on reflecting today.</p>
-                <a href="/" style="background: #6c5ce7; color: white; padding: 10px 20px; border-radius: 10px; text-decoration: none; display: inline-block; margin-top: 10px;">Add Another</a>
+                <a href="/tracker" style="background: #6c5ce7; color: white; padding: 10px 20px; border-radius: 10px; text-decoration: none; display: inline-block; margin-top: 10px;">Add Another</a>
                 <br><br>
                 <a href="/moods" style="color: #6c5ce7;">View History</a>
             </div>
@@ -85,7 +97,7 @@ app.post('/add-mood', (req, res) => {
     `);
 });
 
-// 4. DELETE
+// 5. DELETE MOOD (Safety Popup is already in the HTML form above)
 app.post('/delete-mood', (req, res) => {
     let moods = getSavedMoods();
     moods.splice(req.body.index, 1);
