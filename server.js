@@ -78,9 +78,12 @@ app.get('/moods', (req, res) => {
         <head><title>Companion | MentalSpace</title>${brandStyles}</head>
         <body>
             <div class="container">
-                <div class="header">
+               <div class="header">
                     <h1 class="brand-name">MentalSpace</h1>
                     <p class="tagline">A DigitalSpace For a Healthier Mind</p>
+                    <div class="user-greeting" style="color: #6c5ce7; font-weight: 600; margin-top: 10px; font-size: 1.1rem;">
+                        Welcome back, ${user.name}
+                    </div>
                 </div>
 
                 <div class="companion-box">
