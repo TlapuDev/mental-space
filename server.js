@@ -29,8 +29,13 @@ const brandStyles = `
         .tagline { color: #4a5568; font-style: italic; font-size: 1rem; margin-top: 5px; }
         .user-greeting { color: #6c5ce7; font-weight: 600; margin-top: 10px; font-size: 1.1rem; }
         
+        .snapshot-card { background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); color: white; padding: 25px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(108, 92, 231, 0.2); }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        .stat-box { background: rgba(255,255,255,0.2); padding: 15px; border-radius: 12px; text-align: center; }
+        .stat-value { font-size: 1.5rem; font-weight: bold; display: block; }
+        .stat-label { font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; }
+
         .chart-container { background: white; padding: 20px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        .snapshot-card { background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); color: white; padding: 20px; border-radius: 20px; margin-bottom: 20px; }
         
         .card { background: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 5px solid #6c5ce7; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .intensity-badge { font-size: 0.75rem; background: #6c5ce7; color: white; padding: 3px 10px; border-radius: 20px; margin-left: 10px; }
@@ -47,8 +52,18 @@ app.get('/moods', (req, res) => {
     const user = getUser();
     const recentMoods = moods.slice(-7);
     
+    // PHASE 2 MATH: Calculate Weekly Insight
+    const avgIntensity = recentMoods.length > 0 
+        ? (recentMoods.reduce((sum, m) => sum + parseInt(m.stressScore || 0), 0) / recentMoods.length).toFixed(1)
+        : 0;
+    
+    let insightMsg = "Start tracking to see patterns.";
+    if (avgIntensity > 7) insightMsg = "You've been under high pressure lately. Take it slow.";
+    else if (avgIntensity > 4) insightMsg = "You're navigating some waves. Keep reflecting.";
+    else if (recentMoods.length > 0) insightMsg = "You're finding your flow. Maintain this clarity.";
+
     // Prepare Data for Chart
-    const labels = recentMoods.map(m => m.date.split(',')[0]); // Just the date part
+    const labels = recentMoods.map(m => m.date.split(',')[0]); 
     const dataPoints = recentMoods.map(m => m.stressScore || 0);
 
     const listItems = moods.map((m, index) => `
@@ -71,8 +86,23 @@ app.get('/moods', (req, res) => {
                     <div class="user-greeting">Welcome back, ${user.name}</div>
                 </div>
 
+                <div class="snapshot-card">
+                    <h3 style="margin: 0; font-size: 1.2rem;">Weekly Snapshot</h3>
+                    <p style="margin: 5px 0 15px; font-size: 0.9rem; opacity: 0.9;">${insightMsg}</p>
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <span class="stat-value">${avgIntensity}/10</span>
+                            <span class="stat-label">Avg Intensity</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value">${moods.length}</span>
+                            <span class="stat-label">Total Reflections</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="chart-container">
-                    <h3 style="margin-top:0; color:#4a5568;">Intensity Trends (Last 7)</h3>
+                    <h3 style="margin-top:0; color:#4a5568; font-size: 1.1rem;">Intensity Trends (Last 7)</h3>
                     <canvas id="moodChart"></canvas>
                 </div>
 
@@ -87,7 +117,7 @@ app.get('/moods', (req, res) => {
                     data: {
                         labels: ${JSON.stringify(labels)},
                         datasets: [{
-                            label: 'Intensity Level',
+                            label: 'Intensity',
                             data: ${JSON.stringify(dataPoints)},
                             borderColor: '#6c5ce7',
                             backgroundColor: 'rgba(108, 92, 231, 0.1)',
@@ -108,7 +138,6 @@ app.get('/moods', (req, res) => {
     `);
 });
 
-// Post routes remain the same (add-mood and delete-mood)
 app.post('/add-mood', (req, res) => {
     const moods = getSavedMoods();
     const user = getUser();
@@ -124,4 +153,4 @@ app.post('/delete-mood', (req, res) => {
     res.redirect('/moods');
 });
 
-app.listen(PORT, () => console.log('MentalSpace Visuals Active'));
+app.listen(PORT, () => console.log('MentalSpace Phase 2.1 Active'));
