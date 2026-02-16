@@ -77,7 +77,11 @@ app.get('/moods', (req, res) => {
             <small style="color: #a0aec0;">${m.date}</small>
             <h3 style="margin: 10px 0;">${m.mood} <span style="font-size:0.8rem; background:#6c5ce7; color:white; padding:3px 8px; border-radius:10px;">${m.stressScore}/10</span></h3>
             <p>"${m.note}"</p>
-            <form action="/delete-mood" method="POST"><input type="hidden" name="index" value="${index}"><button type="submit" class="delete-btn">Delete</button></form>
+            
+            <form action="/delete-mood" method="POST" onsubmit="return confirm('Are you sure you want to delete this memory?');">
+                <input type="hidden" name="index" value="${index}">
+                <button type="submit" class="delete-btn">Delete</button>
+            </form>
         </div>
     `).reverse().join('');
 
