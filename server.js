@@ -20,17 +20,27 @@ function getUser() {
     return JSON.parse(fs.readFileSync('user.json'));
 }
 
-function getCompanionNote(latestNote, intensity) {
-    const note = (latestNote || "").toLowerCase();
-    const score = parseInt(intensity || 0);
-    if (score > 7) {
-        if (note.includes('alone') || note.includes('space')) return "Phemelo, I see you need some space. It's okay to retreat to recharge.";
-        if (note.includes('work') || note.includes('pressure')) return "The pressure is high. Try the 4-7-8 breathing technique for 1 minute.";
-        return "You're in a high-intensity zone. Please be extra kind to yourself today.";
+function getCompanionNote(moods) {
+    if (!moods || moods.length === 0) return "Keep reflecting. Every note is a step toward understanding your mind.";
+    
+    const latest = moods[moods.length - 1];
+    const latestNote = (latest.note || "").toLowerCase();
+    const latestScore = parseInt(latest.stressScore || 0);
+
+    const recentScores = moods.slice(-3).map(m => parseInt(m.stressScore || 0));
+    const isHighTrend = recentScores.length === 3 && recentScores.every(s => s >= 7);
+
+    if (isHighTrend) {
+        return "Phemelo, I’ve noticed a pattern of high intensity over your last 3 entries. Please consider a deliberate break today.";
     }
+
+    if (latestScore > 7) {
+        if (latestNote.includes('alone') || latestNote.includes('space')) return "Phemelo, I see you need some space. It's okay to retreat to recharge.";
+        if (latestNote.includes('work') || latestNote.includes('pressure')) return "The pressure feels heavy. Remember to breathe.";
+    }
+    
     return "Keep reflecting. Every note is a step toward understanding your mind.";
 }
-
 const brandStyles = `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -67,7 +77,7 @@ app.get('/moods', (req, res) => {
     const user = getUser();
     const recentMoods = moods.slice(-7);
     const latestEntry = moods[moods.length - 1] || { note: "", stressScore: 0 };
-    const companionAdvice = getCompanionNote(latestEntry.note, latestEntry.stressScore);
+    const companionAdvice = getCompanionNote(moods);
 
     const labels = recentMoods.map(m => m.date ? m.date.split(',')[0] : "Date"); 
     const dataPoints = recentMoods.map(m => m.stressScore || 0);
@@ -134,11 +144,27 @@ app.get('/moods', (req, res) => {
 });
 
 app.post('/add-mood', (req, res) => {
-    const moods = getSavedMoods();
+    let moods = getSavedMoods(); // 1. Pull the old list
     const user = getUser();
-    moods.push({ userId: user.id, mood: req.body.mood, note: req.body.note, stressScore: req.body.stressScore, date: new Date().toLocaleString() });
-    fs.writeFileSync('moods.json', JSON.stringify(moods, null, 2));
-    res.redirect('/moods');
+    
+    // 2. Add the new entry to the list
+    moods.push({ 
+        userId: user.id, 
+        mood: req.body.mood, 
+        note: req.body.note, 
+        stressScore: req.body.stressScore, 
+        date: new Date().toLocaleString() 
+    });
+
+    // 3. THIS IS THE FIX: It ensures the computer actually writes the file
+    try {
+        fs.writeFileSync('moods.json', JSON.stringify(moods, null, 2), 'utf-8');
+        console.log("Success: Data written to moods.json");
+    } catch (err) {
+        console.error("Write Error:", err);
+    }
+    
+    res.redirect('/moods'); // 4. Go back to see the history
 });
 
 app.post('/delete-mood', (req, res) => {
